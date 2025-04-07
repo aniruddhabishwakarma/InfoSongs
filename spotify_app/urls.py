@@ -2,6 +2,7 @@ from django.urls import path
 from .views.songs_views import *
 from .views.auth_views import *
 from .views.user_views import *
+from .views.song_interactions import *
 
 urlpatterns = [
     path('random-songs/', get_random_songs, name='random-songs'),
@@ -10,4 +11,10 @@ urlpatterns = [
     path('google-login/', GoogleLoginAPIView.as_view(), name='google-login'),
     path('profile/', user_profile),
     path('songs/artist/<str:artist_id>/', songs_by_artist, name='songs-by-artist'),
+    path('songs/<str:song_id>/like/', toggle_like, name='toggle-like'),
+    path('songs/<str:song_id>/comments/', get_comments, name='get-comments'),
+    path('songs/<str:song_id>/comments/add/', add_comment, name='add-comment'),
+    path('songs/<str:song_id>/is-liked/', is_song_liked, name='is-song-liked'),
+    path('comments/<int:comment_id>/delete/', delete_comment, name='delete-comment'),
+    path('comments/<int:comment_id>/edit/', edit_comment, name='edit-comment'),
 ]
