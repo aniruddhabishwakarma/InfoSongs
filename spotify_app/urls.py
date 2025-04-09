@@ -17,4 +17,10 @@ urlpatterns = [
     path('songs/<str:song_id>/is-liked/', is_song_liked, name='is-song-liked'),
     path('comments/<int:comment_id>/delete/', delete_comment, name='delete-comment'),
     path('comments/<int:comment_id>/edit/', edit_comment, name='edit-comment'),
+    path('playlists/', user_playlists, name='user-playlists'),
+    path('playlists/create/', create_playlist, name='create-playlist'),
+    path('playlists/<int:playlist_id>/', playlist_detail, name='playlist-detail'),
+    path('playlists/<int:playlist_id>/add/', add_song_to_playlist, name='add-song'),
+    path('playlists/<int:playlist_id>/remove/<str:song_id>/', remove_song_from_playlist, name='remove-song'),
+    path('playlists/<int:playlist_id>/delete/', delete_playlist, name='delete-playlist'),
 ]

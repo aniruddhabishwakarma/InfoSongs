@@ -10,11 +10,11 @@ class LikeSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
     profile_picture = serializers.URLField(source='user.profile_picture', read_only=True)
+    user_id = serializers.IntegerField(source='user.id', read_only=True)  # ✅ Add this
 
     class Meta:
         model = Comment
-        fields = ['id', 'content', 'timestamp', 'display_name', 'profile_picture']
+        fields = ['id', 'content', 'timestamp', 'display_name', 'profile_picture', 'user_id']  # ✅ Include in fields
 
     def get_display_name(self, obj):
-        # Safely fall back to first_name or username if given_name is None
         return obj.user.given_name or obj.user.first_name or obj.user.username

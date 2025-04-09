@@ -22,6 +22,7 @@ class Song(models.Model):
     explicit = models.BooleanField()
     popularity = models.IntegerField(default=0)
     cover_url = models.URLField(blank=True, null=True)
+    album_name = models.CharField(max_length=255, blank=True, null=True)  # 👈 Add this
 
     def __str__(self):
         return self.title

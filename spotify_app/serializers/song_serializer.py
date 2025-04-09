@@ -32,21 +32,15 @@ class RandomSongSerializer(serializers.ModelSerializer):
 class SongDetailSerializer(serializers.ModelSerializer):
     artist = serializers.SerializerMethodField()
     duration = serializers.SerializerMethodField()
-    album = serializers.SerializerMethodField()  # ✅ still included for now
+    album_cover = serializers.CharField(source='cover_url')
+    album_name = serializers.CharField()
 
     class Meta:
         model = Song
         fields = [
             'song_id', 'title', 'duration', 'popularity', 'uri',
-            'album', 'artist'
+            'album_name', 'album_cover', 'artist'
         ]
-
-    def get_album(self, obj):
-        # ✅ Album model removed: now use only cover_url and default label
-        return {
-            'title': "N/A",
-            'cover_url': obj.cover_url
-        } if obj.cover_url else None
 
     def get_artist(self, obj):
         return {
@@ -59,11 +53,14 @@ class SongDetailSerializer(serializers.ModelSerializer):
         minutes = obj.duration // 60000
         seconds = (obj.duration % 60000) // 1000
         return f"{minutes}:{str(seconds).zfill(2)}"
+
+
     
 class SongSimpleSerializer(serializers.ModelSerializer):
     album_cover = serializers.CharField(source='cover_url')
     song_name = serializers.CharField(source='title')
+    album_name = serializers.CharField()  # ✅ fixed here
 
     class Meta:
         model = Song
-        fields = ['song_id', 'song_name', 'duration', 'album_cover']
+        fields = ['song_id', 'song_name', 'duration', 'album_cover', 'album_name']
