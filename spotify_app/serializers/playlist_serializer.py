@@ -3,9 +3,17 @@ from ..models.user_model import Playlist, PlaylistSong
 from ..models.songs_model import Song
 
 class PlaylistSerializer(serializers.ModelSerializer):
+    cover_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Playlist
-        fields = ['id', 'name', 'description', 'created_at']
+        fields = ['id', 'name', 'description', 'created_at', 'cover_url']
+
+    def get_cover_url(self, playlist):
+        first_song = playlist.songs.select_related('song').first()
+        return first_song.song.cover_url if first_song and first_song.song.cover_url else None
+
+
 
 
 class PlaylistDetailSerializer(serializers.ModelSerializer):

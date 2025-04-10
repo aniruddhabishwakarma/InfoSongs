@@ -9,6 +9,8 @@ urlpatterns = [
     path('song-details/<str:song_id>/', get_song_details, name='song-details'),
     path('artist/<str:artist_id>/', artist_info_with_random_songs),
     path('google-login/', GoogleLoginAPIView.as_view(), name='google-login'),
+    path('auth/signup/', SignupAPIView.as_view(), name='signup'),
+    path('auth/login/', LoginAPIView.as_view(), name='login'),
     path('profile/', user_profile),
     path('songs/artist/<str:artist_id>/', songs_by_artist, name='songs-by-artist'),
     path('songs/<str:song_id>/like/', toggle_like, name='toggle-like'),
@@ -23,4 +25,5 @@ urlpatterns = [
     path('playlists/<int:playlist_id>/add/', add_song_to_playlist, name='add-song'),
     path('playlists/<int:playlist_id>/remove/<str:song_id>/', remove_song_from_playlist, name='remove-song'),
     path('playlists/<int:playlist_id>/delete/', delete_playlist, name='delete-playlist'),
+     path('liked-songs/', liked_songs, name='liked-songs'),
 ]

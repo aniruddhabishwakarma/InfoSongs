@@ -3,8 +3,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+
 from ..models.songs_model import Like, Comment, Song
 from ..serializers.song_interactions import LikeSerializer, CommentSerializer
+from ..serializers.song_serializer import SongDetailSerializer
+
 
 # Like or Unlike a song
 @api_view(['POST'])
@@ -76,3 +79,13 @@ def edit_comment(request, comment_id):
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def liked_songs(request):
+    user = request.user
+    liked = Like.objects.filter(user=user).select_related('song', 'song__artist')
+    songs = [like.song for like in liked]
+
+    serializer = SongDetailSerializer(songs, many=True)
+    return Response(serializer.data)

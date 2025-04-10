@@ -1,5 +1,5 @@
 # spotify_app/views/user_views.py
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, serializers
 from spotify_app.models import CustomUser
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
@@ -8,13 +8,15 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from dotenv import load_dotenv
 import os 
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
+from ..serializers.user_serializer import * 
 
 load_dotenv()
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
+User = get_user_model()
 
 
 class GoogleLoginAPIView(APIView):
@@ -63,3 +65,40 @@ class GoogleLoginAPIView(APIView):
 
         except ValueError:
             return Response({"error": "Invalid ID token"}, status=400)
+        
+
+class SignupAPIView(generics.CreateAPIView):
+    serializer_class = SignupSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        user = User.objects.get(email=response.data["email"])
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "user": response.data,
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        })
+
+class LoginAPIView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        password = request.data.get("password")
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"error": "User does not exist"}, status=404)
+
+        user = authenticate(username=user.username, password=password)
+        if user:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            })
+        else:
+            return Response({"error": "Invalid credentials"}, status=401)
