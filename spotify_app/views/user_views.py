@@ -10,6 +10,7 @@ from ..models.user_model import Playlist, PlaylistSong
 from ..models.songs_model import Song
 from ..serializers.playlist_serializer import PlaylistSerializer, PlaylistDetailSerializer
 from spotify_app.serializers.user_serializer import UserProfileSerializer
+from ..serializers.song_serializer import SongDetailSerializer  # adjust this path as needed
 
 
 
@@ -51,8 +52,22 @@ def playlist_detail(request, playlist_id):
     except Playlist.DoesNotExist:
         return Response({"error": "Playlist not found"}, status=404)
 
-    serializer = PlaylistDetailSerializer(playlist)
-    return Response(serializer.data)
+    # Get songs in the playlist
+    playlist_songs = PlaylistSong.objects.filter(playlist=playlist).select_related('song__artist')
+
+    # Extract only the songs, then serialize using SongDetailsSerializer
+    songs = [ps.song for ps in playlist_songs]
+
+    
+
+    song_data = SongDetailSerializer(songs, many=True).data
+
+    return Response({
+        "playlist_id": playlist.id,
+        "playlist_name": playlist.name,
+        "songs": song_data
+    })
+
 
 # Add a song to a playlist
 @api_view(['POST'])

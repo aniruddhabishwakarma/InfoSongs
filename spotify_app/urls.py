@@ -18,6 +18,7 @@ urlpatterns = [
     path('songs/<str:song_id>/comments/add/', add_comment, name='add-comment'),
     path('songs/<str:song_id>/is-liked/', is_song_liked, name='is-song-liked'),
     path('comments/<int:comment_id>/delete/', delete_comment, name='delete-comment'),
+    path("search/", combined_search_view, name="combined-search"),
     path('comments/<int:comment_id>/edit/', edit_comment, name='edit-comment'),
     path('playlists/', user_playlists, name='user-playlists'),
     path('playlists/create/', create_playlist, name='create-playlist'),
