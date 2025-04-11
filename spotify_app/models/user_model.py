@@ -25,3 +25,22 @@ class PlaylistSong(models.Model):
 
     def __str__(self):
         return f"{self.song.title} in {self.playlist.name}"
+    
+# models/search_history.py
+
+class SearchHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    keyword = models.CharField(max_length=255)
+    is_exact_artist = models.BooleanField(default=False)
+    is_exact_song = models.BooleanField(default=False)
+    song = models.ForeignKey("Song", null=True, blank=True, on_delete=models.SET_NULL)
+    artist = models.ForeignKey("Artist", null=True, blank=True, on_delete=models.SET_NULL)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "keyword")
+        ordering = ["-timestamp"]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.keyword}"
+

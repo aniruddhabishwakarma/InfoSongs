@@ -26,5 +26,8 @@ urlpatterns = [
     path('playlists/<int:playlist_id>/add/', add_song_to_playlist, name='add-song'),
     path('playlists/<int:playlist_id>/remove/<str:song_id>/', remove_song_from_playlist, name='remove-song'),
     path('playlists/<int:playlist_id>/delete/', delete_playlist, name='delete-playlist'),
-     path('liked-songs/', liked_songs, name='liked-songs'),
+    path('liked-songs/', liked_songs, name='liked-songs'),
+    path("search-history/", get_search_history, name="get-search-history"),
+    path("delete-search-keyword/<int:pk>/", delete_search_keyword, name="delete-search-keyword"),
+    path("save-search-keyword/", save_search_keyword, name="save-search-keyword"),
 ]

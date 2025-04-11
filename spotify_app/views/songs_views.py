@@ -6,6 +6,7 @@ import random
 from rest_framework import status
 from spotify_app.serializers.artist_serializer import ArtistCustomSerializer
 from random import shuffle
+from django.db.models import Q
 
 @api_view(['GET'])
 def get_random_songs(request):

@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 
-from ..models.user_model import Playlist, PlaylistSong
-from ..models.songs_model import Song
+from ..models.user_model import *
+from ..models.songs_model import *
 from ..serializers.playlist_serializer import PlaylistSerializer, PlaylistDetailSerializer
 from spotify_app.serializers.user_serializer import UserProfileSerializer
 from ..serializers.song_serializer import SongDetailSerializer  # adjust this path as needed
@@ -108,3 +108,67 @@ def delete_playlist(request, playlist_id):
         return Response({"message": "Playlist deleted"})
     except Playlist.DoesNotExist:
         return Response({"error": "Playlist not found"}, status=404)
+    
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def save_search_keyword(request):
+    keyword = request.data.get("keyword", "").strip()
+    exact_song_id = request.data.get("song_id")
+    exact_artist_id = request.data.get("artist_id")
+
+    if not keyword:
+        return Response({"error": "Invalid keyword"}, status=400)
+
+    history, created = SearchHistory.objects.get_or_create(
+        user=request.user,
+        keyword=keyword,
+        defaults={
+            "is_exact_song": bool(exact_song_id),
+            "is_exact_artist": bool(exact_artist_id),
+            "song_id": exact_song_id,
+            "artist_id": exact_artist_id,
+        }
+    )
+    return Response({"success": True})
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_search_history(request):
+    history = SearchHistory.objects.filter(user=request.user).select_related("song", "artist")[:10]
+    data = []
+
+    for item in history:
+        entry = {
+            "id": item.id,
+            "keyword": item.keyword,
+            "type": "song" if item.is_exact_song else "artist" if item.is_exact_artist else "text"
+        }
+
+        if item.is_exact_song and item.song:
+            entry.update({
+                "title": item.song.title,
+                "artist": item.song.artist.name,
+                "cover_url": item.song.cover_url
+            })
+        elif item.is_exact_artist and item.artist:
+            entry.update({
+                "artist_name": item.artist.name,
+                "picture_url": item.artist.picture_url
+            })
+
+        data.append(entry)
+
+    return Response(data)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_search_keyword(request, pk):
+    try:
+        keyword = SearchHistory.objects.get(id=pk, user=request.user)
+        keyword.delete()
+        return Response({"success": True})
+    except SearchHistory.DoesNotExist:
+        return Response({"error": "Keyword not found"}, status=404)
+
+
