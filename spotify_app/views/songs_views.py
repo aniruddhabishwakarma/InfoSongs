@@ -60,18 +60,36 @@ def combined_search_view(request):
     if not query:
         return Response({"artists": [], "songs": []}, status=status.HTTP_200_OK)
 
-    # Tokens from query (e.g., ["nirvana", "katy", "perry"])
     tokens = query.lower().split()
 
     # 🔍 Exact artist match (first priority)
     exact_artist = Artist.objects.filter(name__iexact=query).first()
     if exact_artist:
         top_songs = Song.objects.filter(artist=exact_artist).order_by(Random())[:10]
-        albums = Song.objects.filter(artist=exact_artist).values_list("album_name", flat=True).distinct()[:5]
 
-        return Response({
+        album_names = (
+            Song.objects
+            .filter(artist=exact_artist)
+            .exclude(album_name__isnull=True)
+            .exclude(album_name__exact="")
+            .values_list("album_name", flat=True)
+            .distinct()
+        )
+
+        albums_with_covers = []
+        for album in album_names[:5]:  # Limit to 5 albums
+            song = Song.objects.filter(artist=exact_artist, album_name=album).first()
+            if song:
+                albums_with_covers.append({
+                    "album_name": album,
+                    "cover_url": song.cover_url
+                })
+
+        print(exact_artist)
+
+        return Response({  # 🧠 Return only if artist found
             "exact_artist": {
-                "id": exact_artist.id,
+                "artist_id": exact_artist.artist_id,
                 "name": exact_artist.name,
                 "picture_url": exact_artist.picture_url,
                 "genres": exact_artist.genres,
@@ -83,10 +101,11 @@ def combined_search_view(request):
                     "id": song.song_id,
                     "title": song.title,
                     "album_name": song.album_name,
-                    "cover_url": song.cover_url
+                    "cover_url": song.cover_url,
+                    "song_uri": song.uri
                 } for song in top_songs
             ],
-            "albums_by_artist": list(albums)
+            "albums_by_artist": albums_with_covers
         })
 
     # 🔍 Exact song match (second priority)
@@ -103,7 +122,7 @@ def combined_search_view(request):
                 "cover_url": exact_song.cover_url,
                 "explicit": exact_song.explicit,
                 "artist": {
-                    "id": artist.id,
+                    "id": artist.artist_id,
                     "name": artist.name,
                     "picture_url": artist.picture_url
                 }
@@ -118,7 +137,7 @@ def combined_search_view(request):
             ]
         })
 
-    # 🧠 Multi-token match for partials
+    # 🧠 Token-based multi-match (fallback)
     artist_query = Q()
     song_query = Q()
 
@@ -129,14 +148,13 @@ def combined_search_view(request):
     matched_artists = Artist.objects.filter(artist_query)
     matched_songs = Song.objects.filter(song_query)
 
-    # Merge artists from song matches
     song_artists = {song.artist for song in matched_songs}
     all_artists = set(matched_artists) | song_artists
 
     return Response({
         "artists": [
             {
-                "id": artist.id,
+                "id": artist.artist_id,
                 "name": artist.name,
                 "picture_url": artist.picture_url
             } for artist in all_artists

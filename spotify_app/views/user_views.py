@@ -114,27 +114,34 @@ def delete_playlist(request, playlist_id):
 def save_search_keyword(request):
     keyword = request.data.get("keyword", "").strip()
     exact_song_id = request.data.get("song_id")
-    exact_artist_id = request.data.get("artist_id")
+    spotify_artist_id = request.data.get("artist_id")
 
     if not keyword:
         return Response({"error": "Invalid keyword"}, status=400)
 
-    history, created = SearchHistory.objects.get_or_create(
+    artist_instance = None
+    if spotify_artist_id:
+        artist_instance = Artist.objects.filter(artist_id=spotify_artist_id).first()
+
+    history, created = SearchHistory.objects.update_or_create(
         user=request.user,
         keyword=keyword,
         defaults={
             "is_exact_song": bool(exact_song_id),
-            "is_exact_artist": bool(exact_artist_id),
+            "is_exact_artist": bool(artist_instance),
             "song_id": exact_song_id,
-            "artist_id": exact_artist_id,
+            "artist": artist_instance,  # ✅ Use the object, not the Spotify string ID
         }
     )
+
     return Response({"success": True})
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_search_history(request):
-    history = SearchHistory.objects.filter(user=request.user).select_related("song", "artist")[:10]
+    history = SearchHistory.objects.filter(user=request.user)\
+    .select_related("song", "artist")\
+    .order_by("-timestamp")[:10]  # ✅ latest first
     data = []
 
     for item in history:
