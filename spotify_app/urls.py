@@ -30,4 +30,6 @@ urlpatterns = [
     path("search-history/", get_search_history, name="get-search-history"),
     path("delete-search-keyword/<int:pk>/", delete_search_keyword, name="delete-search-keyword"),
     path("save-search-keyword/", save_search_keyword, name="save-search-keyword"),
+    path("clear-search-history/", clear_search_history, name="clear-search-history"),
+
 ]

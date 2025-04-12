@@ -7,12 +7,13 @@ from rest_framework import status
 from spotify_app.serializers.artist_serializer import ArtistCustomSerializer
 from random import shuffle
 from django.db.models import Q
+from django.db.models.functions import Random
 
 @api_view(['GET'])
 def get_random_songs(request):
-    song_ids = list(Song.objects.values_list('song_id', flat=True))  # ✅ use 'song_id' not 'id'
+    song_ids = list(Song.objects.values_list('song_id', flat=True))  
     random_ids = random.sample(song_ids, min(20, len(song_ids)))
-    songs = Song.objects.filter(song_id__in=random_ids).select_related('artist')  # ✅ removed 'album'
+    songs = Song.objects.filter(song_id__in=random_ids).select_related('artist')
     serializer = RandomSongSerializer(songs, many=True)
     return Response(serializer.data)
 
@@ -65,7 +66,7 @@ def combined_search_view(request):
     # 🔍 Exact artist match (first priority)
     exact_artist = Artist.objects.filter(name__iexact=query).first()
     if exact_artist:
-        top_songs = Song.objects.filter(artist=exact_artist).order_by("-popularity")[:5]
+        top_songs = Song.objects.filter(artist=exact_artist).order_by(Random())[:10]
         albums = Song.objects.filter(artist=exact_artist).values_list("album_name", flat=True).distinct()[:5]
 
         return Response({

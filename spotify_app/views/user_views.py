@@ -170,5 +170,12 @@ def delete_search_keyword(request, pk):
         return Response({"success": True})
     except SearchHistory.DoesNotExist:
         return Response({"error": "Keyword not found"}, status=404)
+    
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def clear_search_history(request):
+    SearchHistory.objects.filter(user=request.user).delete()
+    return Response({"success": True})
 
 
